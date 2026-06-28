@@ -1,6 +1,6 @@
 fastapi==0.115.0
 uvicorn==0.30.6
-alpaca-trade-api==3.3.2
+alpaca-trade-api==3.3.0
 pandas==2.2.2
 numpy==1.26.4
 anthropic>=0.40.0
