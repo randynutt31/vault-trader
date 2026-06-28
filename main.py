@@ -215,7 +215,7 @@ async def run_scan():
                 if bars.empty:
                     continue
                 # Convert to simple object
-                bar_list = [type('Bar', (), {'c': row['close'], 'v': row['volume']})()
+                bar_list = [type('Bar', (), {'c': row['close'], 'v': row['volume']})()\
                            for _, row in bars.iterrows()]
                 result = calculate_signals(bar_list, params)
                 result["symbol"] = symbol
