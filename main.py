@@ -16,7 +16,7 @@ import json
 import datetime
 import asyncio
 from typing import Optional
-from fastapi import FastAPI, BackgroundTasks
+from fastapi import FastAPI, BackgroundTasks, Depends, Header, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -48,6 +48,7 @@ ALPACA_KEY = os.environ.get("ALPACA_KEY_ID", "")
 ALPACA_SECRET = os.environ.get("ALPACA_SECRET_KEY", "")
 ALPACA_BASE_URL = os.environ.get("ALPACA_BASE_URL", "https://paper-api.alpaca.markets")
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+VAULT_TRADER_TOKEN = os.environ.get("VAULT_TRADER_TOKEN", "")
 
 DATA_DIR = "/app/logs"
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -349,7 +350,17 @@ Respond ONLY with valid JSON:
 
 # ── FastAPI app ───────────────────────────────────────────────────────────────
 
-app = FastAPI(title="Vault Trader", version="1.0.0")
+# ── Token lock ────────────────────────────────────────────────────────────────
+# Every route is gated behind this single dependency. The caller must send header
+# X-Vault-Token matching the VAULT_TRADER_TOKEN env var, or the request is
+# rejected with 401 before the route body runs.
+
+def verify_token(x_vault_token: str = Header(default="")):
+    if not VAULT_TRADER_TOKEN or x_vault_token != VAULT_TRADER_TOKEN:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+
+app = FastAPI(title="Vault Trader", version="1.0.0", dependencies=[Depends(verify_token)])
 
 app.add_middleware(
     CORSMiddleware,
