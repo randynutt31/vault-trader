@@ -452,6 +452,31 @@ def get_positions():
         return {"error": str(e)}
 
 
+@app.get("/quote")
+def get_quote(symbol: str = ""):
+    """Latest price for a single symbol. Reuses the SAME Alpaca client and
+    credentials as run_scan (get_alpaca + get_bars) — no second client. Reads
+    the most recent daily bar and returns its close as the price plus the bar's
+    timestamp. Read-only; places no orders."""
+    symbol = symbol.strip().upper()
+    if not symbol:
+        return {"error": "symbol required, e.g. /quote?symbol=AAPL"}
+    api = get_alpaca()
+    if not api:
+        return {"error": "Alpaca not connected"}
+    try:
+        bars = api.get_bars(symbol, "1Day", limit=1).df
+        if bars.empty:
+            return {"error": f"No data for {symbol}"}
+        return {
+            "symbol": symbol,
+            "price": float(bars.iloc[-1]["close"]),
+            "timestamp": bars.index[-1].isoformat(),
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+
 @app.get("/performance")
 def get_performance():
     trades = load_trades()
