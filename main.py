@@ -574,6 +574,22 @@ setInterval(loadAll, 15000);
 </html>"""
 
 
+# ── TEMPORARY startup diagnostic (remove later) ───────────────────────────────
+# Uses the SAME Alpaca client setup as the rest of the app (get_alpaca) to probe
+# the account at boot, so the result shows in Railway deploy logs. Prints no keys.
+def _alpaca_startup_diagnostic():
+    try:
+        api = get_alpaca()
+        if not api:
+            print("ALPACA FAIL: get_alpaca() returned None (alpaca lib missing or ALPACA_KEY_ID unset)", flush=True)
+            return
+        api.get_account()
+        print("ALPACA OK", flush=True)
+    except Exception as e:
+        print(f"ALPACA FAIL: {type(e).__name__}: {e}", flush=True)
+
+
 if __name__ == "__main__":
     log("Vault Trader v1.0.0 starting up")
+    _alpaca_startup_diagnostic()
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
